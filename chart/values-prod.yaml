@@ -1,0 +1,6 @@
+image:
+  tag: ""
+
+env:
+- name: RESPONSE_MESSAGE
+  value: "hello from prod"
