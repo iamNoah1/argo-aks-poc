@@ -1,4 +1,6 @@
 # ArgoCD Playground on AKS
+This repo is ment to be a playground for GitOps using ArgoCD. There are several ways to implement GitOps practices depending on the requirements and the context. In this repo we will use Azure Kubernetes Service, Traefik as an ingress controller, and show some specific way to do Continuous Deployments of Helm charts on Kubernetes. 
+
 
 ## Prerequisites
 
@@ -35,17 +37,26 @@ There are different ways and use cases for deploying applications with ArgoCD. W
 
 
 ## Concept 
-* We create an ArgoCD application for each service and each environment. See the [argo](./argo/) directory for details. 
-* The ArgoCD application "listens" the helm repository. 
-* The target version of the helm chart can be defined in the application manifest.
-* Considering that every change (app code, helm chart, values) results in a new commit on the chart thus a new docker image and helm chart.
-* To promote a that change to any system, we simply make a commit to the respective application manifest, where we update the targetversion of the helm chart
+* We create an ArgoCD application for each service and each environment. See the [argo](./argo/) directory for details. The application is a k8s manifest file that has to applied using `kubectl`.  
+* The ArgoCD application "listens" on the git repo where the helm chart lives. 
+* Considering that every change (app code, helm chart, values) results in a new commit on the repo where the chat lives.
+  * App code changes result in a new Docker image and an update of the appversion (and maybe the chart version)
+  * Changes to the chart results in an update of the chart version (maybe also appversion)
+  * Config changes result in the update of value files
+* Every commit to the repo of the helm chart results in an update of the deployment.
+* We could change the app code without changing the appversion and or chart version, by just changing the value file and update the `image.tag`. This could be helpfull for deploying PRs for example without having to make a commit to the Chart.yaml. 
 
 
 ## Getting Started
 * `kubectl config set-context --current --namespace=argocd`
 * `kubectl apply -f ./argo/argo-app-dev.yaml`
 * `kubecl apply -f ./argo/argo-app-prod.yaml`
+
+## Updating deployed application
+* Building a Docker image that contains a new version of an application
+* Either: 
+  * Update image.tag in the values file of the environment that should be updated
+  * Update appversion (and chartversion) of the helm chart
 
 
 ## Additional Information
@@ -58,16 +69,9 @@ There are different ways and use cases for deploying applications with ArgoCD. W
 
 
 ## Conclusions
-* Pipelines that build Docker images still have to be there
-* Pipelines that build Helm Charts still have to be there
+* Pipelines that build Docker images still have to be there.
+* Pipelines that build Helm Charts still have to be there. Though as the argo application listens to the repo where the helm chart lives in, instead of a helm chart repository, we still would need to build a helm chart (preferably after a deployment and tests). 
 * All value files for a chart reside inside the chart itself.
 
 ## TODO
-* Find if it is better to 
-  * Reference helm repos and promote changes to argo app manifest changes or 
-  * Let the argo app have the helm chart repo as source and having the changes on the values file  
-* Let's try: 
-  * Build another version of the app 
-  * Update Helm Chart (because we do it like this at the moment -> new app version => new Chart version)
-  * Work with changes of application manifest
 * Maybe Helm Application Set is something that works good

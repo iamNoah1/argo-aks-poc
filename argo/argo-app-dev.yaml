@@ -6,15 +6,12 @@ metadata:
 spec:
   project: default
   source:
-    chart: saywhat-chart
-    repoURL: registry-1.docker.io/iamnoah4real
-    targetRevision: "1.0.0"
+    repoURL: https://github.com/iamNoah1/argo-aks-poc
+    path: chart
+    targetRevision: HEAD
     helm:
       valueFiles:
       - values-dev.yaml
-      values: |
-        image:
-          tag: "1.0.1"
   destination:
     name: bps-ms-conhub-aks-01
     namespace: gitops-test
